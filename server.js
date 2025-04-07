@@ -11,7 +11,7 @@ import errorMiddleware from "./middleware/error.middleware.js";
 
 // Rest of your server.js code...
 
-const PORT = 3000;
+const PORT = process.env.PORT;
 
 // Connect to Database
 connect();
