@@ -55,7 +55,7 @@ io.on("connection", (socket) => {
     const receiverSocketId = userSocketMap[toUserId];
     const callerSocketId = socket.id;
 
-    console.log(`📞 ${name} (${fromUserId}) is calling ${toUserId.username}`);
+    console.log(`📞 ${name} (${fromUserId}) is calling ${toUserId}`);
 
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("incomingCall", {
