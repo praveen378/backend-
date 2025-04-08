@@ -1,4 +1,4 @@
-import { ExpressPeerServer } from "peer";
+ import { ExpressPeerServer } from "peer";
 import http from "http";
 import express from "express";
 import cors from "cors";
@@ -7,29 +7,43 @@ dotenv.config();
 
 const peerApp = express();
 
-// ✅ Allow cross-origin requests from your frontend
+const CLIENT_URL = process.env.CLIENT_URL || "https://baatekare.netlify.app";
+
+// ✅ Enable CORS for Express routes
 peerApp.use(cors({
-  origin: process.env.CLIENT_URL || "*", // fallback to * for dev
+  origin: CLIENT_URL,
   credentials: true,
 }));
 
-// ✅ Optional: Health check
+// ✅ Basic health route
 peerApp.get("/", (req, res) => {
   res.send("🚀 PeerJS signaling server is live");
 });
 
 const peerServer = http.createServer(peerApp);
 
-// ✅ Configure PeerServer
+// ✅ Configure PeerJS server
 const peer = ExpressPeerServer(peerServer, {
   debug: true,
-  path: "/", // this makes route `/peerjs/id` valid
+  path: "/",
 });
 
-// ✅ Mount PeerJS server at /peerjs
-peerApp.use("/peerjs", peer);
+// ✅ Apply CORS headers manually for PeerJS
+peer.on("connection", (client) => {
+  console.log("🧩 Peer connected:", client.id);
+});
 
-// ✅ Use dynamic port for Railway
+peer.on("disconnect", (client) => {
+  console.log("🔌 Peer disconnected:", client.id);
+});
+
+// ✅ Important: Add headers manually before /peerjs route
+peerApp.use("/peerjs", (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", CLIENT_URL);
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+}, peer);
+
 const PORT = process.env.PORT || 3001;
 peerServer.listen(PORT, () => {
   console.log(`📡 PeerJS Server running on port ${PORT}`);
