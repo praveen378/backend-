@@ -75,6 +75,20 @@ socket.on("acceptCall", ({ to, signal }) => {
   io.to(to).emit("callAccepted", signal);
 });
 
+// When call is accepted
+socket.on("acceptCall", ({ to, signal }) => {
+  console.log(`✅ Call accepted. Sending signal back to: ${to}`);
+  io.to(to).emit("callAccepted", signal);
+
+  // Let the caller know the call was accepted
+  io.to(to).emit("callAcceptedStatus", { accepted: true });
+});
+
+// When call is rejected
+socket.on("rejectCall", ({ to }) => {
+  console.log(`❌ Call rejected. Notifying caller: ${to}`);
+  io.to(to).emit("callRejectedStatus", { accepted: false });
+});
 
   
   socket.on("disconnect", () => {
