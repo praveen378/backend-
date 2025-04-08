@@ -18,7 +18,7 @@ const peer = ExpressPeerServer(peerServer, {
   path: "/",
 });
 
-peerApp.use("/", peer); // 👈 localhost:3001/peerjs/my-peer-id
+peerApp.use("/peerjs", peer); // 👈 localhost:3001/peerjs/my-peer-id
 
 peerServer.listen(3001, () => {
   console.log("📡 PeerJS Server running on http://localhost:3001/peerjs");
