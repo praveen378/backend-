@@ -67,6 +67,16 @@ io.on("connection", (socket) => {
       console.log(`❌ User ${toUserId} is not online`);
     }
   });
+
+  // for calling
+// Add this inside io.on("connection", ...) in socket.js
+socket.on("acceptCall", ({ to, signal }) => {
+  console.log(`✅ Call accepted. Sending signal back to: ${to}`);
+  io.to(to).emit("callAccepted", signal);
+});
+
+
+  
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
     io.emit("onlineUsers", Object.keys(userSocketMap));
