@@ -1,4 +1,4 @@
-import User from "../models/user.model.js";
+ import User from "../models/user.model.js";
 import { asynchandler } from "../utility/asynHandler.utlity.js";
 import { errorHandler } from "../utility/errorHandler.utility.js";
 import bcrypt from "bcryptjs";
@@ -57,7 +57,7 @@ export const register = asynchandler(async (req, res, next) => {
 // LOGIN USER
 export const login = asynchandler(async (req, res, next) => {
   const { username, password } = req.body;
-
+  console.log("login", req.body);
   if (!username || !password) {
     return next(new errorHandler("Username and password are required", 400));
   }
@@ -106,6 +106,7 @@ export const logout = asynchandler(async (req, res, next) => {
 
 // GET USER PROFILE
 export const getProfile = asynchandler(async (req, res, next) => {
+  console.log("req.user", req.user);
   const profile = await User.findById(req.user._id).select("-password");
 
   if (!profile) {
