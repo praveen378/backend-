@@ -1,25 +1,41 @@
-  import { ExpressPeerServer } from "peer";
-import http from "http";
+ import { app, server } from "./socket/socket.js";
+import "./socket/peer.js"; // 👈 Just import this to start PeerJS server
 import express from "express";
-import cors from "cors"; // ✅ You forgot to add this
-import dotenv from "dotenv";
-dotenv.config();
-const PORT = process.env.PORT || 3001;
-const peerApp = express();
-peerApp.use(cors({
-  origin: process.env.CLIENT_URL, // ✅ e.g. "https://baatekare.netlify.app"
-  credentials: true,
-}));
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
-const peerServer = http.createServer(peerApp);
+import { connect } from "./db/connection.js";
+import userRoutes from "./routes/user.routes.js";
+import messageRoutes from "./routes/message.routes.js";
+import errorMiddleware from "./middleware/error.middleware.js";
 
-const peer = ExpressPeerServer(peerServer, {
-  debug: true,
-  path: "/",
-});
+// Rest of your server.js code...
 
-peerApp.use("/peerjs", peer); // 👈 localhost:3001/peerjs/my-peer-id
+const PORT = process.env.PORT;
 
-peerServer.listen(PORT, () => {
-  console.log("📡 PeerJS Server running on http://localhost:3001/peerjs");
+// Connect to Database
+connect();
+
+// Middleware
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL, // Allow frontend
+    credentials: true, // Allow cookies/auth headers
+  })
+);
+app.use(express.json()); // Parse JSON requests
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Routes
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/messages", messageRoutes);
+app.use("/api/v1/status", messageRoutes);
+
+// Error Handling Middleware
+app.use(errorMiddleware);
+
+// Start Server
+server.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
 });
