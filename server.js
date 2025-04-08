@@ -1,55 +1,42 @@
  import express from "express";
-import http from "http";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
- 
-
 import { connect } from "./db/connection.js";
-import { app, server } from "./socket/socket.js";
-
+import { app as socketApp, server } from "./socket/socket.js"; // 🧠 Uses same Express app/socket
 import userRoutes from "./routes/user.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import errorMiddleware from "./middleware/error.middleware.js";
+import "./socket/peer.js"; // ✅ Import to initialize PeerJS
 
 dotenv.config();
 
-// Database Connection
+const PORT = process.env.PORT || 3000;
+const CLIENT_URL = process.env.CLIENT_URL;
+
+// 🔌 Connect to Database
 connect();
 
-const app = express();
-const server = http.createServer(app);
-
-// Middlewares
-app.use(
+// 🌐 Middlewares
+socketApp.use(
   cors({
-    origin: process.env.CLIENT_URL, // e.g. https://baatekare.netlify.app
+    origin: CLIENT_URL,
     credentials: true,
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+socketApp.use(express.json());
+socketApp.use(express.urlencoded({ extended: true }));
+socketApp.use(cookieParser());
 
-// Routes
-app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/messages", messageRoutes);
-app.use("/api/v1/status", messageRoutes);
+// 🛣️ Routes
+socketApp.use("/api/v1/users", userRoutes);
+socketApp.use("/api/v1/messages", messageRoutes);
+socketApp.use("/api/v1/status", messageRoutes);
 
+// 🧯 Error handler
+socketApp.use(errorMiddleware);
 
-
-// 📡 PeerJS server
-const peerServer = ExpressPeerServer(server, {
-    debug: true,
-    path: "/",
-  });
-  app.use("/peerjs", peerServer);
-  
-// Error Handler
-app.use(errorMiddleware);
-
-// Start Server
-const PORT = process.env.PORT || 3000;
+// 🚀 Start server
 server.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
