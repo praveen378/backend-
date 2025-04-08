@@ -7,7 +7,7 @@ import { app as socketApp, server } from "./socket/socket.js"; // 🧠 Uses same
 import userRoutes from "./routes/user.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import errorMiddleware from "./middleware/error.middleware.js";
-import "./socket/peer.js"; // ✅ Import to initialize PeerJS
+ 
 
 dotenv.config();
 
