@@ -1,10 +1,9 @@
-import dotenv from "dotenv";
+   import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-
 import Message from "../models/message.model.js";
 
 const app = express();
@@ -15,7 +14,7 @@ const io = new Server(server, {
     origin: process.env.CLIENT_URL,
     credentials: true,
   },
-  path: "/socket.io", // ✅ Prevents path conflict
+  path: "/socket.io",
 });
 
 const userSocketMap = {};
@@ -26,7 +25,8 @@ io.on("connection", (socket) => {
 
   userSocketMap[userId] = socket.id;
   io.emit("onlineUsers", Object.keys(userSocketMap));
-// for Message seen 
+
+  // ✅ Message Seen
   socket.on("messageSeen", async ({ senderId, receiverId }) => {
     try {
       const result = await Message.updateMany(
@@ -50,16 +50,16 @@ io.on("connection", (socket) => {
     }
   });
 
-  // for calling
+  // ✅ Handle outgoing call
   socket.on("callUser", ({ toUserId, signalData, fromUserId, name }) => {
     const receiverSocketId = userSocketMap[toUserId];
     const callerSocketId = socket.id;
-
+  
     console.log(`📞 ${name} (${fromUserId}) is calling ${toUserId}`);
-
+  
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("incomingCall", {
-        from: callerSocketId, // for WebRTC signaling
+        from: fromUserId, // Pass the caller's userId
         signal: signalData,
         name,
       });
@@ -68,29 +68,27 @@ io.on("connection", (socket) => {
     }
   });
 
-  // for calling
-// Add this inside io.on("connection", ...) in socket.js
-socket.on("acceptCall", ({ to, signal }) => {
-  console.log(`✅ Call accepted. Sending signal back to: ${to}`);
-  io.to(to).emit("callAccepted", signal);
-});
+  // ✅ Handle call accepted
 
-// When call is accepted
-socket.on("acceptCall", ({ to, signal }) => {
-  console.log(`✅ Call accepted. Sending signal back to: ${to}`);
-  io.to(to).emit("callAccepted", signal);
-
-  // Let the caller know the call was accepted
-  io.to(to).emit("callAcceptedStatus", { accepted: true });
-});
-
-// When call is rejected
-socket.on("rejectCall", ({ to }) => {
-  console.log(`❌ Call rejected. Notifying caller: ${to}`);
-  io.to(to).emit("callRejectedStatus", { accepted: false });
-});
-
+  socket.on("acceptCall", ({ to, signal }) => {
+    console.log(`✅ Call accepted. Sending signal back to: ${to}`);
   
+    // Send signaling data to caller
+    const callerSocketId = userSocketMap[to];
+    if (callerSocketId) {
+      io.to(callerSocketId).emit("callAccepted", signal);
+    }
+  });
+
+  // ✅ Handle call rejected
+  socket.on("rejectCall", ({ to }) => {
+    console.log(`❌ Call rejected. Notifying caller: ${to}`);
+
+    // Notify caller for UI feedback
+    io.to(to).emit("callRejectedStatus", { accepted: false });
+  });
+
+  // ✅ Handle disconnect
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
     io.emit("onlineUsers", Object.keys(userSocketMap));
