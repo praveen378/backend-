@@ -51,16 +51,14 @@ io.on("connection", (socket) => {
   });
 
   // ✅ Handle outgoing call
-  socket.on("callUser", ({ toUserId, signalData, fromUserId, name }) => {
+  socket.on("callUser", ({ toUserId, offer, fromUserId, name }) => {
     const receiverSocketId = userSocketMap[toUserId];
     const callerSocketId = socket.id;
   
-    console.log(`📞 ${name} (${fromUserId}) is calling ${toUserId}`);
-  
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("incomingCall", {
-        from: fromUserId, // Pass the caller's userId
-        signal: signalData,
+        from: socket.id,
+        offer,
         name,
       });
     } else {
