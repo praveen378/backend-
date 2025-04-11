@@ -1,4 +1,4 @@
-   import dotenv from "dotenv";
+ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
@@ -54,30 +54,38 @@ io.on("connection", (socket) => {
   socket.on("callUser", ({ toUserId, offer, fromUserId, name }) => {
     const receiverSocketId = userSocketMap[toUserId];
     const callerSocketId = socket.id;
-  
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("incomingCall", {
-        from: socket.id,
-        offer,
-        name,
-      });
-    } else {
-      console.log(`❌ User ${toUserId} is not online`);
-    }
+    console.log(
+      "receiverSocketId and callerSocketId",
+      receiverSocketId,
+      "amnd",
+      callerSocketId
+    );
+
+    console.log(name, "is callingand id", name, fromUserId);
+    io.to(receiverSocketId).emit("incomingCall", {
+      from: socket.id,
+      offer,
+      name,
+    });
   });
 
   // ✅ Handle call accepted
 
-  socket.on("acceptCall", ({ to, signal }) => {
+  socket.on("callAccepted", ({ to, ans }) => {
     console.log(`✅ Call accepted. Sending signal back to: ${to}`);
-  
-    // Send signaling data to caller
-    const callerSocketId = userSocketMap[to];
-    if (callerSocketId) {
-      io.to(callerSocketId).emit("callAccepted", signal);
-    }
+    io.to(to).emit("callAccepted", { from: socket.id, ans });
   });
 
+// negotiate call
+  socket.on("negotiate", ({ to, offer }) => {
+    console.log(` ✅Negotiating call with: ${to}`);
+    io.to(to).emit("callNegotiation", { from: socket.id, offer });
+  });
+
+  socket.on("peer:nego:done",({to,ans })=>{
+    console.log(`Negotiation done with: ${to}`);
+    io.to(to).emit("call:nego:final", { from: socket.id, ans });
+  })
   // ✅ Handle call rejected
   socket.on("rejectCall", ({ to }) => {
     console.log(`❌ Call rejected. Notifying caller: ${to}`);
