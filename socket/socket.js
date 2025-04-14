@@ -86,6 +86,11 @@ io.on("connection", (socket) => {
     console.log(`Negotiation done with: ${to}`);
     io.to(to).emit("call:nego:final", { from: socket.id, ans });
   })
+ // ✅ Handle ICE Candidate forwarding
+socket.on("iceCandidate", ({ to, candidate }) => {
+  console.log(`📡 Forwarding ICE candidate to: ${to}`);
+  io.to(to).emit("iceCandidate", { candidate });
+});
   // ✅ Handle call rejected
   socket.on("rejectCall", ({ to }) => {
     console.log(`❌ Call rejected. Notifying caller: ${to}`);
