@@ -94,11 +94,14 @@ socket.on("iceCandidate", ({ to, candidate }) => {
   // ✅ Handle call rejected
   socket.on("rejectCall", ({ to }) => {
     console.log(`❌ Call rejected. Notifying caller: ${to}`);
-
     // Notify caller for UI feedback
     io.to(to).emit("callRejectedStatus", { accepted: false });
   });
 
+ socket.on("callCanceled",({to})=>{
+  console.log("call cancelled from socket ", socket.id, "to ", to)
+  io.to(to).emit("callEnded",{callStatus:false})
+ }
   // ✅ Handle disconnect
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
