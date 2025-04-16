@@ -98,10 +98,12 @@ socket.on("iceCandidate", ({ to, candidate }) => {
     io.to(to).emit("callRejectedStatus", { accepted: false });
   });
 
- socket.on("callCanceled",({to})=>{
-  console.log("call cancelled from socket ", socket.id, "to ", to)
-  io.to(to).emit("callEnded",{callStatus:false})
- }
+// ✅ Handle call ended
+  socket.on("callCanceled",({to})=>{
+    console.log("call cancelled from socket ", socket.id, "to ", to)
+    io.to(to).emit("callEnded",{callStatus:false})
+   })
+
   // ✅ Handle disconnect
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
