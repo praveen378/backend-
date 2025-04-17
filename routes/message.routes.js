@@ -1,13 +1,9 @@
 import express from "express";
 const router = express.Router();
-import {
-  getProfile,
-  login,
-  logout,
-  register,
-} from "../controllers/user.controller.js";
+ 
 import { isAuthenticated } from "../middleware/auth.middleware.js";
 import {
+  getUnreadSenders,
   recieveMessage,
   sendMessage,
 } from "../controllers/message.controller.js";
@@ -25,5 +21,8 @@ router.put(
   isAuthenticated,
   updateMessagesStatusBySender
 );
+
+router.get("/get-notificationIds/:myId", isAuthenticated, getUnreadSenders);
  
 export default router;
+
