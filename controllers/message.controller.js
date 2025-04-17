@@ -3,6 +3,7 @@ import Conversation from "../models/conversation.model.js";
 import { asynchandler } from "../utility/asynHandler.utlity.js";
 import { errorHandler } from "../utility/errorHandler.utility.js";
 import { getSocketId, io } from "../socket/socket.js";
+import mongoose from "mongoose";
 // import { Server, io } from "socket.io";
 
 const generateToken = (userId) => {
@@ -100,3 +101,62 @@ export const recieveMessage = asynchandler(async (req, res, next) => {
     },
   });
 });
+
+// Get all unread senders
+export const getUnreadSenders = asynchandler(async (req, res, next) => {
+  const myId = req.user._id;
+
+  if (!myId) {
+    return next(new errorHandler("User ID is required", 400));
+  }
+
+  try {
+    const unreadSenders = await Message.aggregate([
+      {
+        $match: {
+          recieverId: new mongoose.Types.ObjectId(myId),
+          // recieverId: myId,
+          status: { $ne: "read" },
+        },
+      },
+      {
+        $group: {
+          _id: "$senderId",
+          unreadCount: { $sum: 1 },
+          lastMessageTime: { $max: "$createdAt" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "senderInfo",
+        },
+      },
+      {
+        $unwind: "$senderInfo",
+      },
+      {
+        $project: {
+          senderId: "$_id",
+          unreadCount: 1,
+          senderName: "$senderInfo.fullName", // adjust if your user schema uses another field
+          lastMessageTime: 1,
+        },
+      },
+      {
+        $sort: { lastMessageTime: -1 }, // optional: recent first
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      responseData: unreadSenders,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching unread senders:", error);
+    return next(new errorHandler("Server Error", 500));
+  }
+});
+
