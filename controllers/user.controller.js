@@ -92,6 +92,8 @@ export const login = asynchandler(async (req, res, next) => {
 
 // LOGOUT USER
 export const logout = asynchandler(async (req, res, next) => {
+ 
+   console.log("logout", req.user);
   res
     .cookie("token", "", {
       expires: new Date(0),
